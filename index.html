@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Princeton SEAS Events</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: #faf8f4;
+      color: #1a1a1a;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #0e0c1e;
+      color: #fff;
+      padding: 2.5rem 2rem 0;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-bottom: 2rem;
+    }
+    .badge {
+      display: inline-block;
+      background: #e87722;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 2px;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    h1 em { color: #e87722; font-style: italic; }
+    .subtitle {
+      font-family: Arial, sans-serif;
+      font-size: 0.95rem;
+      color: #ccc;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .header-rule {
+      height: 4px;
+      background: linear-gradient(90deg, #e87722 0%, #f5c071 50%, transparent 100%);
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── Controls ── */
+    .controls {
+      max-width: 1200px;
+      margin: 2rem auto 0;
+      padding: 0 2rem;
+    }
+    .search-row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .search-group { flex: 1; min-width: 200px; }
+    .control-label {
+      display: block;
+      font-family: Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 0.4rem;
+    }
+    #search {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      font-size: 0.95rem;
+      font-family: Arial, sans-serif;
+      border: 2px solid #0e0c1e;
+      border-radius: 4px;
+      background: #fff;
+      outline: none;
+    }
+    #search:focus { border-color: #e87722; box-shadow: 0 0 0 3px rgba(232,119,34,0.2); }
+
+    #dept-filter {
+      padding: 0.65rem 1rem;
+      font-size: 0.95rem;
+      font-family: Arial, sans-serif;
+      border: 2px solid #0e0c1e;
+      border-radius: 4px;
+      background: #fff;
+      outline: none;
+      min-width: 220px;
+    }
+    #dept-filter:focus { border-color: #e87722; }
+
+    .tag-filter-label {
+      font-family: Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    #tag-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .tag-btn {
+      font-size: 0.7rem;
+      font-family: Arial, sans-serif;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      border: 1.5px solid #ccc;
+      background: transparent;
+      color: #444;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tag-btn.active { color: #fff; border-color: transparent; }
+    .tag-btn:focus-visible { outline: 3px solid #e87722; outline-offset: 2px; }
+
+    #clear-btn {
+      font-family: Arial, sans-serif;
+      font-size: 0.8rem;
+      background: none;
+      border: none;
+      color: #e87722;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0.2rem 0;
+      display: none;
+    }
+    #clear-btn:focus-visible { outline: 3px solid #e87722; outline-offset: 2px; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      max-width: 1200px;
+      margin: 0.75rem auto 0.4rem;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      font-size: 0.82rem;
+      color: #666;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    #updated-at { font-style: italic; }
+    #failure-banner {
+      display: none;
+      background: #fff3cd;
+      border: 1px solid #e87722;
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-family: Arial, sans-serif;
+      font-size: 0.82rem;
+      color: #6b4226;
+      max-width: 1200px;
+      margin: 0 auto 0.5rem;
+      padding: 0.5rem 2rem;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      max-width: 1200px;
+      margin: 0 auto 3rem;
+      padding: 0 2rem;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      background: #fff;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th {
+      background: #0e0c1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.85rem 1rem;
+      text-align: left;
+      border-bottom: 3px solid #e87722;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { background: #1a1830; }
+    th .sort-icon { margin-left: 0.3rem; opacity: 0.5; font-size: 0.65rem; }
+    th.sorted .sort-icon { opacity: 1; }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+    tr:nth-child(odd) td { background: #f9f7f3; }
+    tr:nth-child(even) td { background: #fff; }
+    tr.hidden { display: none; }
+
+    .event-link {
+      font-family: Georgia, serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #0e0c1e;
+      text-decoration: none;
+      border-bottom: 2px solid #e87722;
+      padding-bottom: 1px;
+      line-height: 1.4;
+    }
+    .event-link:hover { color: #e87722; }
+    .event-link:focus-visible { outline: 3px solid #e87722; outline-offset: 3px; }
+
+    .speaker-text {
+      font-family: Arial, sans-serif;
+      font-size: 0.78rem;
+      color: #666;
+      font-style: italic;
+      margin-top: 0.2rem;
+    }
+    .dept-text {
+      font-family: Arial, sans-serif;
+      font-size: 0.8rem;
+      color: #444;
+    }
+    .date-text {
+      font-family: Arial, sans-serif;
+      font-size: 0.82rem;
+      color: #333;
+      white-space: nowrap;
+    }
+    .time-text {
+      font-family: Arial, sans-serif;
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 0.15rem;
+    }
+    .location-text {
+      font-family: Arial, sans-serif;
+      font-size: 0.8rem;
+      color: #444;
+    }
+    .desc-text {
+      font-family: Arial, sans-serif;
+      font-size: 0.78rem;
+      color: #555;
+      margin-top: 0.35rem;
+      line-height: 1.5;
+      max-width: 380px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .tag-list { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.35rem; }
+    .tag {
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      cursor: pointer;
+      border: none;
+      background: #555;
+    }
+    .tag:focus-visible { outline: 3px solid #f0a500; outline-offset: 2px; }
+    .tag.active { outline: 2px solid #f0a500; outline-offset: 1px; }
+
+    /* ── Empty / loading states ── */
+    #loading, #empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      font-family: Arial, sans-serif;
+      font-size: 0.9rem;
+      color: #888;
+    }
+    #loading { display: block; }
+    #empty   { display: none; }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #eee;
+      border-top-color: #e87722;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-family: Arial, sans-serif;
+      font-size: 0.75rem;
+      color: #aaa;
+      border-top: 1px solid #e5e5e5;
+    }
+    footer a { color: #e87722; }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="badge">Graduate Engineering Council · Princeton University</div>
+    <h1>SEAS Events &amp; Talks<br><em>Across Departments &amp; Centers</em></h1>
+    <p class="subtitle">
+      Upcoming lectures, seminars, and talks from engineering departments and research centers.
+      Updated automatically twice a week.
+    </p>
+  </div>
+  <div class="header-rule"></div>
+</header>
+
+<main>
+  <div class="controls">
+    <div class="search-row">
+      <div class="search-group">
+        <label class="control-label" for="search">Search</label>
+        <input type="search" id="search" placeholder="Search by title, speaker, or keyword…"
+               aria-label="Search events by title, speaker, or keyword" />
+      </div>
+      <div>
+        <label class="control-label" for="dept-filter">Department</label>
+        <select id="dept-filter" aria-label="Filter by department">
+          <option value="">All departments</option>
+        </select>
+      </div>
+    </div>
+
+    <span class="tag-filter-label" id="tag-filter-label">Filter by topic</span>
+    <div id="tag-filters" role="group" aria-labelledby="tag-filter-label"></div>
+    <button id="clear-btn" aria-label="Clear all active filters">✕ Clear filters</button>
+  </div>
+
+  <div class="status-bar">
+    <div id="count" aria-live="polite" aria-atomic="true"></div>
+    <div id="updated-at"></div>
+  </div>
+  <div id="failure-banner" role="alert"></div>
+
+  <div class="table-wrap">
+    <div id="loading">
+      <div class="spinner" aria-hidden="true"></div>
+      Loading events…
+    </div>
+    <div id="empty" role="status">No events match your filters.</div>
+
+    <table id="events-table" aria-label="Princeton SEAS upcoming events" style="display:none;">
+      <caption class="sr-only">
+        Upcoming events and talks from Princeton SEAS departments and centers,
+        sortable by date, title, or department.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col" data-col="date" style="width:10%">
+            Date <span class="sort-icon" aria-hidden="true">↕</span>
+          </th>
+          <th scope="col" data-col="title" style="width:30%">
+            Event <span class="sort-icon" aria-hidden="true">↕</span>
+          </th>
+          <th scope="col" data-col="department" style="width:18%">
+            Department <span class="sort-icon" aria-hidden="true">↕</span>
+          </th>
+          <th scope="col" data-col="location" style="width:14%">
+            Location <span class="sort-icon" aria-hidden="true">↕</span>
+          </th>
+          <th scope="col" style="width:28%">Tags</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  Data scraped from Princeton department event pages ·
+  <a href="https://github.com/gecseas/princeton-events" target="_blank" rel="noopener">
+    View on GitHub
+  </a> ·
+  Graduate Engineering Council
+</footer>
+
+<script>
+// ── Tag colours ────────────────────────────────────────────────────────────
+const TAG_COLORS = {
+  "Computer Science":"#1a1a2e","AI / ML":"#16213e","Theory":"#0f3460","Systems":"#533483",
+  "Tech Policy":"#2b2d42","Privacy":"#4a5568","Internet":"#457b9d",
+  "Chemical Engineering":"#7b3f00","Biological Engineering":"#5c4a1e","Engineering":"#264653",
+  "Civil Engineering":"#3d5a80","Environmental Engineering":"#4a7c59","Sustainability":"#4a7c59",
+  "Electrical Engineering":"#023e8a","Computer Engineering":"#0077b6",
+  "Mechanical Engineering":"#37474f","Aerospace":"#455a64",
+  "Operations Research":"#6b2d8b","Financial Engineering":"#553c7b","Statistics":"#4a3570",
+  "Materials Science":"#8b4513","Applied Science":"#023e8a","STEM":"#0077b6",
+  "Energy":"#c05621","Environment":"#4a7c59","Climate":"#2d5016",
+};
+
+function tagColor(t) { return TAG_COLORS[t] || "#555"; }
+
+// ── State ──────────────────────────────────────────────────────────────────
+let allEvents   = [];
+let activeTags  = [];
+let sortCol     = "date";
+let sortDir     = 1;   // 1 = asc, -1 = desc
+
+// ── Bootstrap ──────────────────────────────────────────────────────────────
+fetch("data/events.json")
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById("loading").style.display = "none";
+    document.getElementById("events-table").style.display = "";
+
+    allEvents = data.events || [];
+
+    // Updated timestamp
+    if (data.updated) {
+      const d = new Date(data.updated);
+      document.getElementById("updated-at").textContent =
+        "Last updated: " + d.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+    }
+
+    // Failure banner
+    if (data.failures && data.failures.length > 0) {
+      const banner = document.getElementById("failure-banner");
+      banner.style.display = "block";
+      banner.textContent =
+        `⚠ The following sources failed to scrape and may be outdated: ${data.failures.join(", ")}. ` +
+        "Check the GitHub Actions log for details.";
+    }
+
+    buildDeptFilter();
+    buildTagFilters();
+    renderTable();
+    setupSortHeaders();
+  })
+  .catch(() => {
+    document.getElementById("loading").textContent =
+      "Could not load events. Please try again later.";
+  });
+
+// ── Dept dropdown ──────────────────────────────────────────────────────────
+function buildDeptFilter() {
+  const sel = document.getElementById("dept-filter");
+  const depts = [...new Set(allEvents.map(e => e.department))].sort();
+  depts.forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = d;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", renderTable);
+}
+
+// ── Tag filter buttons ─────────────────────────────────────────────────────
+function buildTagFilters() {
+  const allTags = [...new Set(allEvents.flatMap(e => e.tags || []))].sort();
+  const container = document.getElementById("tag-filters");
+  allTags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.className = "tag-btn";
+    btn.textContent = tag;
+    btn.dataset.tag = tag;
+    btn.setAttribute("aria-pressed", "false");
+    btn.addEventListener("click", () => toggleTag(tag));
+    container.appendChild(btn);
+  });
+}
+
+function toggleTag(tag) {
+  activeTags = activeTags.includes(tag)
+    ? activeTags.filter(t => t !== tag)
+    : [...activeTags, tag];
+  updateTagUI();
+  renderTable();
+}
+
+function updateTagUI() {
+  document.querySelectorAll(".tag-btn").forEach(btn => {
+    const on = activeTags.includes(btn.dataset.tag);
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.style.background = on ? tagColor(btn.dataset.tag) : "transparent";
+    btn.style.color = on ? "#fff" : "#444";
+    btn.style.borderColor = on ? tagColor(btn.dataset.tag) : "#ccc";
+  });
+  document.querySelectorAll(".tag").forEach(btn => {
+    const on = activeTags.includes(btn.dataset.tag);
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  document.getElementById("clear-btn").style.display =
+    activeTags.length > 0 ? "inline" : "none";
+}
+
+// ── Sorting ────────────────────────────────────────────────────────────────
+function setupSortHeaders() {
+  document.querySelectorAll("th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (sortCol === col) { sortDir *= -1; }
+      else { sortCol = col; sortDir = 1; }
+      document.querySelectorAll("th[data-col]").forEach(h => {
+        h.classList.remove("sorted");
+        h.querySelector(".sort-icon").textContent = "↕";
+      });
+      th.classList.add("sorted");
+      th.querySelector(".sort-icon").textContent = sortDir === 1 ? "↑" : "↓";
+      renderTable();
+    });
+  });
+}
+
+function sortedEvents(events) {
+  return [...events].sort((a, b) => {
+    const va = (a[sortCol] || "").toLowerCase();
+    const vb = (b[sortCol] || "").toLowerCase();
+    if (va < vb) return -sortDir;
+    if (va > vb) return  sortDir;
+    return 0;
+  });
+}
+
+// ── Main render ────────────────────────────────────────────────────────────
+function renderTable() {
+  const query  = document.getElementById("search").value.toLowerCase().trim();
+  const dept   = document.getElementById("dept-filter").value;
+  const tbody  = document.getElementById("table-body");
+
+  const filtered = allEvents.filter(e => {
+    const text = [e.title, e.speaker, e.description, e.department, ...(e.tags||[])]
+                   .join(" ").toLowerCase();
+    const matchSearch = !query || text.includes(query);
+    const matchDept   = !dept  || e.department === dept;
+    const matchTags   = activeTags.length === 0 ||
+                        activeTags.every(t => (e.tags||[]).includes(t));
+    return matchSearch && matchDept && matchTags;
+  });
+
+  const sorted = sortedEvents(filtered);
+
+  tbody.innerHTML = "";
+  sorted.forEach(e => {
+    const tr = document.createElement("tr");
+
+    // Date / time
+    const tdDate = document.createElement("td");
+    tdDate.innerHTML =
+      `<div class="date-text">${formatDate(e.date)}</div>` +
+      (e.time ? `<div class="time-text">${e.time}</div>` : "");
+
+    // Title + speaker + description
+    const tdTitle = document.createElement("td");
+    tdTitle.innerHTML =
+      `<a class="event-link" href="${e.link}" target="_blank" rel="noopener noreferrer"
+          aria-label="${escHtml(e.title)} (opens in new tab)">${escHtml(e.title)}</a>` +
+      (e.speaker ? `<div class="speaker-text">${escHtml(e.speaker)}</div>` : "") +
+      (e.description ? `<div class="desc-text">${escHtml(e.description)}</div>` : "");
+
+    // Department
+    const tdDept = document.createElement("td");
+    tdDept.innerHTML = `<div class="dept-text">${escHtml(e.department)}</div>`;
+
+    // Location
+    const tdLoc = document.createElement("td");
+    tdLoc.innerHTML = `<div class="location-text">${escHtml(e.location || "—")}</div>`;
+
+    // Tags
+    const tdTags = document.createElement("td");
+    const tagList = document.createElement("div");
+    tagList.className = "tag-list";
+    (e.tags || []).forEach(tag => {
+      const btn = document.createElement("button");
+      btn.className = "tag" + (activeTags.includes(tag) ? " active" : "");
+      btn.textContent = tag;
+      btn.dataset.tag = tag;
+      btn.style.background = tagColor(tag);
+      btn.setAttribute("aria-pressed", activeTags.includes(tag) ? "true" : "false");
+      btn.setAttribute("aria-label", `Filter by topic: ${tag}`);
+      btn.addEventListener("click", () => toggleTag(tag));
+      tagList.appendChild(btn);
+    });
+    tdTags.appendChild(tagList);
+
+    tr.append(tdDate, tdTitle, tdDept, tdLoc, tdTags);
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("count").innerHTML =
+    `Showing <strong>${sorted.length}</strong> of ${allEvents.length} events`;
+  document.getElementById("empty").style.display = sorted.length === 0 ? "block" : "none";
+  document.getElementById("events-table").style.display = sorted.length === 0 ? "none" : "";
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function formatDate(iso) {
+  if (!iso || iso.length < 8) return iso || "—";
+  try {
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString("en-US",
+      { weekday:"short", month:"short", day:"numeric" });
+  } catch { return iso; }
+}
+
+function escHtml(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// ── Event listeners ────────────────────────────────────────────────────────
+document.getElementById("search").addEventListener("input", renderTable);
+document.getElementById("clear-btn").addEventListener("click", () => {
+  activeTags = [];
+  updateTagUI();
+  document.getElementById("dept-filter").value = "";
+  document.getElementById("search").value = "";
+  renderTable();
+});
+</script>
+</body>
+</html>
